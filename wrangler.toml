@@ -1,0 +1,6 @@
+name = "esim-tracker"
+main = "worker.js"
+compatibility_date = "2026-06-05"
+
+[triggers]
+crons = ["0 2 * * *"]
