@@ -1,4 +1,4 @@
-// esim-tracker v6.7 — Minimalist
+// esim-tracker v6.8 — Minimalist
 // 单文件 Cloudflare Worker：前端 / API / 定时提醒
 const HTML_CONTENT = `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -282,6 +282,33 @@ const HTML_CONTENT = `<!DOCTYPE html>
         .flag { display: inline-flex; gap: 1px; font-size: 16px; line-height: 1; }
         .note-icon { font-size: 10px; opacity: 0.5; margin-right: 4px; }
         .btn-icon-danger { color: var(--danger); }
+
+        /* ========== eSIM Code ========== */
+        .esim-code-wrap {
+            display: flex; align-items: center; gap: 4px;
+            background: var(--bg); border: 1px solid var(--border);
+            padding: 4px 8px; margin-top: var(--s);
+        }
+        .esim-code-text {
+            font-family: var(--font-mono); font-size: 11px;
+            color: var(--text-secondary); flex: 1; min-width: 0;
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+            letter-spacing: 0.02em;
+        }
+        .esim-code-label {
+            font-size: 9px; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 0.06em; color: var(--text-tertiary);
+            white-space: nowrap; flex-shrink: 0;
+        }
+        .btn-copy {
+            padding: 2px 6px; font-size: 10px; font-weight: 500;
+            border: 1px solid var(--border); background: transparent;
+            color: var(--text-secondary); cursor: pointer;
+            transition: all 0.15s; white-space: nowrap; flex-shrink: 0;
+            font-family: var(--font);
+        }
+        .btn-copy:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-copy.copied { border-color: var(--safe); color: var(--safe); }
     </style>
 </head>
 <body class="container">
@@ -372,6 +399,10 @@ const HTML_CONTENT = `<!DOCTYPE html>
                 <div>
                     <label class="text-xs uppercase tracking-wider text-tertiary mb-s label">平台</label>
                     <input type="text" id="simPlatforms" placeholder="Telegram, Google" class="input-box w-full">
+                </div>
+                <div>
+                    <label class="text-xs uppercase tracking-wider text-tertiary mb-s label">eSIM 激活码</label>
+                    <textarea id="simEsimCode" rows="3" placeholder="LPA:1$smdp.example.com$XXXX-XXXX-XXXX-XXXX" class="input-box w-full" style="resize:vertical;font-family:var(--font-mono);font-size:12px;letter-spacing:0.02em"></textarea>
                 </div>
                 <div>
                     <label class="text-xs uppercase tracking-wider text-tertiary mb-s label">备注</label>
@@ -525,6 +556,15 @@ const HTML_CONTENT = `<!DOCTYPE html>
                         }
                         var remark=sim.remark||'';
                         var remarkHTML=remark?'<div class="card-remark"><span class="note-icon">▸</span>'+esc(remark.length>60?remark.substring(0,60)+'…':remark)+'</div>':'';
+                        var esimCodeHTML='';
+                        if(sim.esimCode){
+                            var codeId='code-'+sim.id;
+                            esimCodeHTML='<div class="esim-code-wrap">'+
+                                '<span class="esim-code-label">eSIM</span>'+
+                                '<span class="esim-code-text mono" id="'+codeId+'" title="'+esc(sim.esimCode)+'">'+esc(sim.esimCode)+'</span>'+
+                                '<button class="btn-copy" onclick="copyEsimCode(\\''+codeId+'\\',this)" title="复制激活码">复制</button>'+
+                            '</div>';
+                        }
                         var diffTxt=diff<0?'0':String(diff);
                         var renewCycle=cycleNum;
                         var displayCycle=cycleNum||'-';
@@ -542,7 +582,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
                                 '</div>'+
                             '</div>'+
                             '<div class="card-name truncate" title="'+esc(sim.name)+'">'+esc(sim.name||'')+'</div>'+
-                            '<div class="card-number truncate">'+esc(sim.number||'—')+'</div>'+remarkHTML+platformsHTML+
+                            '<div class="card-number truncate">'+esc(sim.number||'—')+'</div>'+esimCodeHTML+remarkHTML+platformsHTML+
                             '<div class="card-footer">'+
                                 '<div class="flex justify-between text-sm mb-s"><span class="text-secondary">剩余</span><span class="font-semibold'+(diff<=15&&diff>0?' text-danger':'')+'">'+diffTxt+' 天</span></div>'+
                                 '<div class="progress-track"><div class="progress-fill '+fillClass+'" style="width:'+pct+'%"></div></div>'+
@@ -556,6 +596,26 @@ const HTML_CONTENT = `<!DOCTYPE html>
             document.getElementById('stat-safe').innerText=safeC;
             document.getElementById('stat-warn').innerText=warnC;
             document.getElementById('stat-danger').innerText=dangC;
+        }
+
+        // ==================== COPY ====================
+        function copyEsimCode(codeId, btn){
+            var el=document.getElementById(codeId);
+            if(!el)return;
+            var text=el.title||el.textContent;
+            if(navigator.clipboard&&navigator.clipboard.writeText){
+                navigator.clipboard.writeText(text).then(function(){
+                    btn.textContent='✓';btn.classList.add('copied');
+                    setTimeout(function(){btn.textContent='复制';btn.classList.remove('copied');},1500);
+                }).catch(function(){fallbackCopy(text,btn);});
+            }else{fallbackCopy(text,btn);}
+        }
+        function fallbackCopy(text,btn){
+            var ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+            document.body.appendChild(ta);ta.select();
+            try{document.execCommand('copy');btn.textContent='✓';btn.classList.add('copied');setTimeout(function(){btn.textContent='复制';btn.classList.remove('copied');},1500);}
+            catch(e){showToast('复制失败','error');}
+            document.body.removeChild(ta);
         }
 
         // ==================== SEARCH ====================
@@ -579,7 +639,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
             e.preventDefault();
             var b=document.getElementById('submitBtn'),o=b.textContent;
             b.disabled=true;b.textContent='保存…';
-            var p={name:document.getElementById('simName').value.trim(),number:document.getElementById('simNumber').value.trim(),cycle:parseInt(document.getElementById('simCycle').value,10)||0,platforms:document.getElementById('simPlatforms').value.trim(),remark:document.getElementById('simRemark').value.trim(),expireDate:document.getElementById('simExpire').value};
+            var p={name:document.getElementById('simName').value.trim(),number:document.getElementById('simNumber').value.trim(),cycle:parseInt(document.getElementById('simCycle').value,10)||0,platforms:document.getElementById('simPlatforms').value.trim(),remark:document.getElementById('simRemark').value.trim(),expireDate:document.getElementById('simExpire').value,esimCode:document.getElementById('simEsimCode').value.trim()};
             if(editingId)p.id=editingId;
             try{
                 var r=await fetch(WORKER_API_URL,{method:editingId?'PUT':'POST',headers:getAuthHeaders(),body:JSON.stringify(p)});
@@ -649,6 +709,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
             document.getElementById('simCycle').value=s.cycle||'';
             document.getElementById('simPlatforms').value=s.platforms||'';
             document.getElementById('simRemark').value=s.remark||'';
+            document.getElementById('simEsimCode').value=s.esimCode||'';
             document.getElementById('simExpire').value=s.expireDate||'';
             showModal('addModal','modalContent');
         }
@@ -675,7 +736,7 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 const JSON_HEADERS = { "Content-Type": "application/json;charset=UTF-8" };
-const MAX_LEN = { name: 80, number: 40, platforms: 120, remark: 240 };
+const MAX_LEN = { name: 80, number: 40, platforms: 120, remark: 240, esimCode: 512 };
 const DAY = 86400000;
 
 function json(data, status = 200) {
@@ -717,6 +778,7 @@ function cleanSim(input, partial = false) {
   if (!partial || input.number !== undefined) out.number = clip(input.number, MAX_LEN.number);
   if (!partial || input.platforms !== undefined) out.platforms = clip(input.platforms, MAX_LEN.platforms);
   if (!partial || input.remark !== undefined) out.remark = clip(input.remark, MAX_LEN.remark);
+  if (!partial || input.esimCode !== undefined) out.esimCode = clip(input.esimCode, MAX_LEN.esimCode);
   return { value: out };
 }
 
