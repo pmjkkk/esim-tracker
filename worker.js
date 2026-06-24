@@ -779,7 +779,9 @@ async function readEsims(env) {
 
 async function authorized(request, env) {
   const token = (request.headers.get("Authorization") || "").trim();
-  return token && await env.ESIM_DB.get("session_token_" + token);
+  if (!token) return false;
+  const stored = await env.ESIM_DB.get("admin_session_token");
+  return stored && stored === token;
 }
 
 async function sha256(text) {
@@ -887,7 +889,7 @@ export default {
         if (await sha256(salt + code) === storedHash) {
           const token = crypto.randomUUID();
           await Promise.all([
-            env.ESIM_DB.put("session_token_" + token, "valid", { expirationTtl: 86400 }),
+            env.ESIM_DB.put("admin_session_token", token, { expirationTtl: 86400 }),
             env.ESIM_DB.delete("admin_auth_code_hash"),
             env.ESIM_DB.delete("admin_auth_salt"),
             env.ESIM_DB.delete("admin_auth_attempts")
