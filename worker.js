@@ -285,27 +285,13 @@ const HTML_CONTENT = `<!DOCTYPE html>
 
         /* ========== eSIM Code ========== */
         .esim-code-wrap {
-            display: flex; align-items: center; gap: 4px;
-            background: var(--bg); border: 1px solid var(--border);
-            padding: 4px 8px; margin-top: var(--s);
-        }
-        .esim-code-text {
-            font-family: var(--font-mono); font-size: 11px;
-            color: var(--text-secondary); flex: 1; min-width: 0;
-            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-            letter-spacing: 0.02em;
-        }
-        .esim-code-label {
-            font-size: 9px; font-weight: 600; text-transform: uppercase;
-            letter-spacing: 0.06em; color: var(--text-tertiary);
-            white-space: nowrap; flex-shrink: 0;
+            margin-top: var(--s);
         }
         .btn-copy {
-            padding: 2px 6px; font-size: 10px; font-weight: 500;
+            padding: 5px 12px; font-size: 11px; font-weight: 500;
             border: 1px solid var(--border); background: transparent;
             color: var(--text-secondary); cursor: pointer;
-            transition: all 0.15s; white-space: nowrap; flex-shrink: 0;
-            font-family: var(--font);
+            transition: all 0.15s; font-family: var(--font);
         }
         .btn-copy:hover { border-color: var(--accent); color: var(--accent); }
         .btn-copy.copied { border-color: var(--safe); color: var(--safe); }
@@ -558,11 +544,9 @@ const HTML_CONTENT = `<!DOCTYPE html>
                         var remarkHTML=remark?'<div class="card-remark"><span class="note-icon">▸</span>'+esc(remark.length>60?remark.substring(0,60)+'…':remark)+'</div>':'';
                         var esimCodeHTML='';
                         if(sim.esimCode){
-                            var codeId='code-'+sim.id;
+                            var safeCode=esc(sim.esimCode).replace(/'/g,'&#39;');
                             esimCodeHTML='<div class="esim-code-wrap">'+
-                                '<span class="esim-code-label">eSIM</span>'+
-                                '<span class="esim-code-text mono" id="'+codeId+'" title="'+esc(sim.esimCode)+'">'+esc(sim.esimCode)+'</span>'+
-                                '<button class="btn-copy" onclick="copyEsimCode(\\''+codeId+'\\',this)" title="复制激活码">复制</button>'+
+                                '<button class="btn-copy w-full" onclick="copyEsimCodeRaw(\\''+safeCode+'\\',this)">复制 eSIM 激活码</button>'+
                             '</div>';
                         }
                         var diffTxt=diff<0?'0':String(diff);
@@ -599,21 +583,19 @@ const HTML_CONTENT = `<!DOCTYPE html>
         }
 
         // ==================== COPY ====================
-        function copyEsimCode(codeId, btn){
-            var el=document.getElementById(codeId);
-            if(!el)return;
-            var text=el.title||el.textContent;
+        function copyEsimCodeRaw(text, btn){
+            var decoded=text.replace(/&#39;/g,"'").replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
             if(navigator.clipboard&&navigator.clipboard.writeText){
-                navigator.clipboard.writeText(text).then(function(){
-                    btn.textContent='✓';btn.classList.add('copied');
-                    setTimeout(function(){btn.textContent='复制';btn.classList.remove('copied');},1500);
-                }).catch(function(){fallbackCopy(text,btn);});
-            }else{fallbackCopy(text,btn);}
+                navigator.clipboard.writeText(decoded).then(function(){
+                    btn.textContent='✓ 已复制';btn.classList.add('copied');
+                    setTimeout(function(){btn.textContent='复制 eSIM 激活码';btn.classList.remove('copied');},1500);
+                }).catch(function(){fallbackCopy(decoded,btn,'复制 eSIM 激活码');});
+            }else{fallbackCopy(decoded,btn,'复制 eSIM 激活码');}
         }
-        function fallbackCopy(text,btn){
+        function fallbackCopy(text,btn,label){
             var ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
             document.body.appendChild(ta);ta.select();
-            try{document.execCommand('copy');btn.textContent='✓';btn.classList.add('copied');setTimeout(function(){btn.textContent='复制';btn.classList.remove('copied');},1500);}
+            try{document.execCommand('copy');btn.textContent='✓ 已复制';btn.classList.add('copied');setTimeout(function(){btn.textContent=label||'复制';btn.classList.remove('copied');},1500);}
             catch(e){showToast('复制失败','error');}
             document.body.removeChild(ta);
         }
