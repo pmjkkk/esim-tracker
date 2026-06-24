@@ -463,7 +463,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
 
         async function sendAuthCode(){
             var b=document.getElementById('sendCodeBtn'),o=b.textContent;
-            b.disabled=true;b.textContent='发送…';
+            b.disabled=true;b.textContent='发送中…';
             try{
                 var r=await fetch('/api/auth/send',{method:'POST'}),d=await r.json();
                 if(r.ok&&d.success){
@@ -621,8 +621,8 @@ const HTML_CONTENT = `<!DOCTYPE html>
         async function submitForm(e){
             e.preventDefault();
             var b=document.getElementById('submitBtn'),o=b.textContent;
-            b.disabled=true;b.textContent='保存…';
-            var p={name:document.getElementById('simName').value.trim(),number:document.getElementById('simNumber').value.trim(),cycle:parseInt(document.getElementById('simCycle').value,10)||0,platforms:document.getElementById('simPlatforms').value.trim(),remark:document.getElementById('simRemark').value.trim(),expireDate:document.getElementById('simExpire').value,esimCode:document.getElementById('simEsimCode').value.trim()};
+            b.disabled=true;b.textContent='保存中…';
+            var p={name:document.getElementById('simName').value.trim(),number:document.getElementById('simNumber').value.trim(),cycle:parseInt(document.getElementById('simCycle').value,10)||0,platforms:document.getElementById('simPlatforms').value.trim(),remark:document.getElementById('simRemark').value.trim(),expireDate:document.getElementById('simExpire').value,esimCode:(function(s){return s?s.replace(/^lpa:/i,'LPA:'):''})(document.getElementById('simEsimCode').value.trim())};
             if(editingId)p.id=editingId;
             try{
                 var r=await fetch(WORKER_API_URL,{method:editingId?'PUT':'POST',headers:getAuthHeaders(),body:JSON.stringify(p)});
@@ -656,7 +656,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
                 title:'确认删除',message:'此操作无法恢复。',btnText:'删除',btnClass:'btn-danger',
                 onConfirm:async function(){
                     var b=document.getElementById('confirmActionBtn'),o=b.textContent;
-                    b.disabled=true;b.textContent='删除…';
+                    b.disabled=true;b.textContent='删除中…';
                     try{
                         var r=await fetch(WORKER_API_URL,{method:'DELETE',headers:getAuthHeaders(),body:JSON.stringify({id:id})});
                         if(r.status===401){logout();return;}
