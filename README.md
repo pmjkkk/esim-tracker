@@ -43,7 +43,7 @@ Cloudflare Workers · Workers KV · Telegram Bot API · 原生 HTML/CSS/JS · Wr
 | 类型 | 名称 | 值 / 说明 |
 |------|------|-----------|
 | KV 绑定 | `ESIM_DB` | 指向你创建的 KV Namespace（建议命名 `esim_db`） |
-| 环境变量 | `TG_BOT_TOKEN` | BotFather 颁发的 Telegram Bot Token |
+| 环境变量 | `TG_BOT_TOKEN` | @BotFather 颁发的 Telegram Bot Token |
 | 环境变量 | `TG_CHAT_ID` | @userinfobot 返回的 Chat ID |
 
 ## 部署
