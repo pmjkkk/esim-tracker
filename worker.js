@@ -583,7 +583,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
 
         // ==================== COPY ====================
         function copyEsimCodeRaw(btn){
-            var text=btn.getAttribute('data-code')||'';
+            var text=(btn.getAttribute('data-code')||'').replace(/^lpa:/i,'LPA:');
             var orig=btn.textContent;
             function onSuccess(){
                 btn.textContent='✓ 已复制';
@@ -761,7 +761,10 @@ function cleanSim(input, partial = false) {
   if (!partial || input.number !== undefined) out.number = clip(input.number, MAX_LEN.number);
   if (!partial || input.platforms !== undefined) out.platforms = clip(input.platforms, MAX_LEN.platforms);
   if (!partial || input.remark !== undefined) out.remark = clip(input.remark, MAX_LEN.remark);
-  if (!partial || input.esimCode !== undefined) out.esimCode = clip(input.esimCode, MAX_LEN.esimCode);
+  if (!partial || input.esimCode !== undefined) {
+    const raw = clip(input.esimCode, MAX_LEN.esimCode);
+    out.esimCode = raw ? raw.replace(/^lpa:/i, 'LPA:') : raw;
+  }
   return { value: out };
 }
 
