@@ -293,7 +293,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
             color: var(--text-secondary); cursor: pointer;
             transition: all 0.15s; font-family: var(--font);
         }
-        .btn-copy:hover { border-color: var(--accent); color: var(--accent); }
+        .btn-copy:hover { border-color: #a3a3a3; background: #fafafa; }
         .btn-copy.copied { border-color: var(--safe); color: var(--safe); }
     </style>
 </head>
@@ -388,7 +388,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
                 </div>
                 <div>
                     <label class="text-xs uppercase tracking-wider text-tertiary mb-s label">eSIM 激活码</label>
-                    <textarea id="simEsimCode" rows="3" placeholder="LPA:1$smdp.example.com$XXXX-XXXX-XXXX-XXXX" class="input-box w-full" style="resize:vertical;font-family:var(--font-mono);font-size:12px;letter-spacing:0.02em"></textarea>
+                    <textarea id="simEsimCode" rows="3" placeholder="LPA:1$smdp.example.com$XXXX-XXXX-XXXX-XXXX" class="input-box w-full" style="resize:vertical;font-family:var(--font-mono);font-size:12px;letter-spacing:0.02em" autocapitalize="none" autocorrect="off" spellcheck="false"></textarea>
                 </div>
                 <div>
                     <label class="text-xs uppercase tracking-wider text-tertiary mb-s label">备注</label>
@@ -544,9 +544,8 @@ const HTML_CONTENT = `<!DOCTYPE html>
                         var remarkHTML=remark?'<div class="card-remark"><span class="note-icon">▸</span>'+esc(remark.length>60?remark.substring(0,60)+'…':remark)+'</div>':'';
                         var esimCodeHTML='';
                         if(sim.esimCode){
-                            var safeCode=esc(sim.esimCode).replace(/'/g,'&#39;');
                             esimCodeHTML='<div class="esim-code-wrap">'+
-                                '<button class="btn-copy w-full" onclick="copyEsimCodeRaw(\\''+safeCode+'\\',this)">复制 eSIM 激活码</button>'+
+                                '<button class="btn-copy w-full" data-code="'+esc(sim.esimCode)+'" onclick="copyEsimCodeRaw(this)">复制 eSIM 激活码</button>'+
                             '</div>';
                         }
                         var diffTxt=diff<0?'0':String(diff);
@@ -583,19 +582,21 @@ const HTML_CONTENT = `<!DOCTYPE html>
         }
 
         // ==================== COPY ====================
-        function copyEsimCodeRaw(text, btn){
-            var decoded=text.replace(/&#39;/g,"'").replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>');
+        function copyEsimCodeRaw(btn){
+            var text=btn.getAttribute('data-code')||'';
+            var orig=btn.textContent;
+            function onSuccess(){
+                btn.textContent='✓ 已复制';
+                setTimeout(function(){btn.textContent=orig;},1500);
+            }
             if(navigator.clipboard&&navigator.clipboard.writeText){
-                navigator.clipboard.writeText(decoded).then(function(){
-                    btn.textContent='✓ 已复制';btn.classList.add('copied');
-                    setTimeout(function(){btn.textContent='复制 eSIM 激活码';btn.classList.remove('copied');},1500);
-                }).catch(function(){fallbackCopy(decoded,btn,'复制 eSIM 激活码');});
-            }else{fallbackCopy(decoded,btn,'复制 eSIM 激活码');}
+                navigator.clipboard.writeText(text).then(onSuccess).catch(function(){fallbackCopy(text,btn,orig);});
+            }else{fallbackCopy(text,btn,orig);}
         }
-        function fallbackCopy(text,btn,label){
+        function fallbackCopy(text,btn,orig){
             var ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
             document.body.appendChild(ta);ta.select();
-            try{document.execCommand('copy');btn.textContent='✓ 已复制';btn.classList.add('copied');setTimeout(function(){btn.textContent=label||'复制';btn.classList.remove('copied');},1500);}
+            try{document.execCommand('copy');btn.textContent='✓ 已复制';setTimeout(function(){btn.textContent=orig;},1500);}
             catch(e){showToast('复制失败','error');}
             document.body.removeChild(ta);
         }
