@@ -336,7 +336,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
                 <span class="stat-value text-safe" id="stat-safe">—</span>
             </div>
             <div class="stat-card">
-                <div><span class="stat-dot dot-danger"></span><span class="stat-label">告警 ≤15天</span></div>
+                <div><span class="stat-dot dot-danger"></span><span class="stat-label">告警</span></div>
                 <span class="stat-value text-danger" id="stat-danger">—</span>
             </div>
             <div class="stat-card">
@@ -530,8 +530,9 @@ const HTML_CONTENT = `<!DOCTYPE html>
                         if(diff>0){fillClass='progress-safe';badgeClass='badge-safe';statusText='未到期';safeC++;}
                         else if(diff>-15){fillClass='progress-danger';badgeClass='badge-danger';statusText='告警';dangC++;}
                         else{fillClass='progress-warn';badgeClass='badge-warn';statusText='已过期';warnC++;}
-                        var cycleNum=parseInt(sim.cycle,10)||0;
-                        var pct=diff<=0?100:Math.max(2,Math.min(100,Math.round(((cycleNum||180)-diff)/(cycleNum||180)*100)));
+                        var cycleNum=parseInt(sim.cycle,10)||180;
+                        var elapsed=cycleNum-diff;
+                        var pct=Math.max(2,Math.min(100,Math.round(elapsed/cycleNum*100)));
                         var flag=getCountryFlag(sim.number);
                         var platformsHTML='';
                         if(sim.platforms){
@@ -563,7 +564,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
                             '<div class="card-footer">'+
                                 '<div class="flex justify-between text-sm mb-s"><span class="text-secondary">剩余</span><span class="font-semibold'+(diff<=0?' text-warn':diff<=15?' text-danger':'')+'">'+( diff<0?'0':diff)+' 天</span></div>'+
                                 '<div class="progress-track"><div class="progress-fill '+fillClass+'" style="width:'+pct+'%"></div></div>'+
-                                '<div class="card-meta mt-s"><span>周期 '+(cycleNum||'-')+' 天</span><span class="mono">'+esc(sim.expireDate)+'</span></div>'+
+                                '<div class="card-meta mt-s"><span>周期 '+(parseInt(sim.cycle,10)||'-')+' 天</span><span class="mono">'+esc(sim.expireDate)+'</span></div>'+
                             '</div>'+
                         '</div>';
                 });
