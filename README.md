@@ -42,7 +42,7 @@ Cloudflare Workers · Workers KV · Telegram Bot API · 原生 HTML/CSS/JS · Wr
 
 | 类型 | 名称 | 值 / 说明 |
 |------|------|-----------|
-| KV 绑定 | `ESIM_DB` | 指向你创建的 KV Namespace（建议命名 `esim_kv`） |
+| KV 绑定 | `ESIM_KV` | 指向你创建的 KV Namespace（建议命名 `esim_kv`） |
 | 环境变量 | `TG_BOT_TOKEN` | @BotFather 颁发的 Telegram Bot Token |
 | 环境变量 | `TG_CHAT_ID` | @userinfobot 返回的 Chat ID |
 
@@ -73,7 +73,7 @@ Cloudflare Dashboard → `Storage & databases → Workers KV → Create Instance
 
 进入 Worker 项目 `esim-tracker`，按「[配置速查](#配置速查)」完成：
 
-- `Settings → Bindings → Add binding → KV Namespace`：变量名 `ESIM_DB` → 选择 `esim_kv`
+- `Settings → Bindings → Add binding → KV Namespace`：变量名 `ESIM_KV` → 选择 `esim_kv`
 - `Settings → Variables and Secrets → Add`：添加 `TG_BOT_TOKEN` 与 `TG_CHAT_ID`
 
 ### 5. 访问面板
@@ -127,7 +127,7 @@ Cloudflare Cron 使用 UTC 时间，`0 2 * * *` 约等于北京时间每天 10:0
 |------|----------|
 | Wrangler 报 `name` 不合法 | `wrangler.toml` 的 `name` 必须全小写，只能包含字母、数字和短横线 |
 | 页面 404 | 确认 Worker 部署成功，入口文件是 `worker.js` |
-| API 报 KV 未绑定 | 确认绑定变量名是 `ESIM_DB` |
+| API 报 KV 未绑定 | 确认绑定变量名是 `ESIM_KV` |
 | 收不到验证码 | 确认 Bot Token / Chat ID 正确，且已主动给机器人发过消息 |
 | 验证码过期 | 重新点击「发送验证码」 |
 | 定时提醒没收到 | 检查 Cron 是否启用、TG 环境变量是否正确、KV 中是否有卡片数据 |

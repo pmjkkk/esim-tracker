@@ -773,14 +773,14 @@ async function readJson(request) {
 }
 
 async function readEsims(env) {
-  const esims = await env.ESIM_DB.get("esim_list", { type: "json" });
+  const esims = await env.ESIM_KV.get("esim_list", { type: "json" });
   return Array.isArray(esims) ? esims : [];
 }
 
 async function authorized(request, env) {
   const token = (request.headers.get("Authorization") || "").trim();
   if (!token) return false;
-  const stored = await env.ESIM_DB.get("admin_session_token");
+  const stored = await env.ESIM_KV.get("admin_session_token");
   return stored && stored === token;
 }
 
@@ -829,8 +829,8 @@ export default {
       });
     }
 
-    if (!env.ESIM_DB) {
-      return json({ success: false, message: "KV 未绑定，请绑定 ESIM_DB" }, 500);
+    if (!env.ESIM_KV) {
+      return json({ success: false, message: "KV 未绑定，请绑定 ESIM_KV" }, 500);
     }
 
     const tgToken = env.TG_BOT_TOKEN;
@@ -839,25 +839,25 @@ export default {
     if (path === "/api/auth/send" && request.method === "POST") {
       try {
         if (!tgToken || !tgChat) return json({ success: false, message: "TG 机器人未配置，请检查 TG_BOT_TOKEN / TG_CHAT_ID" }, 500);
-        if (await env.ESIM_DB.get("admin_auth_send_cooldown")) return json({ success: false, message: "验证码已发送，请稍后再试" }, 429);
+        if (await env.ESIM_KV.get("admin_auth_send_cooldown")) return json({ success: false, message: "验证码已发送，请稍后再试" }, 429);
 
         const code = String(Math.floor(100000 + Math.random() * 900000));
         const salt = crypto.randomUUID();
         await Promise.all([
-          env.ESIM_DB.put("admin_auth_code_hash", await sha256(salt + code), { expirationTtl: 300 }),
-          env.ESIM_DB.put("admin_auth_salt", salt, { expirationTtl: 300 }),
-          env.ESIM_DB.put("admin_auth_attempts", "0", { expirationTtl: 300 }),
-          env.ESIM_DB.put("admin_auth_send_cooldown", "1", { expirationTtl: 60 })
+          env.ESIM_KV.put("admin_auth_code_hash", await sha256(salt + code), { expirationTtl: 300 }),
+          env.ESIM_KV.put("admin_auth_salt", salt, { expirationTtl: 300 }),
+          env.ESIM_KV.put("admin_auth_attempts", "0", { expirationTtl: 300 }),
+          env.ESIM_KV.put("admin_auth_send_cooldown", "1", { expirationTtl: 60 })
         ]);
 
         const text = `🔐 <b>eSIM 保号面板 · 安全验证</b>\n\n动态验证码：<code>${code}</code>\n\n<i>5 分钟内有效。如非本人操作请忽略。</i>`;
         const tgRes = await sendTelegram(tgToken, tgChat, text);
         if (!tgRes.ok) {
           await Promise.all([
-            env.ESIM_DB.delete("admin_auth_code_hash"),
-            env.ESIM_DB.delete("admin_auth_salt"),
-            env.ESIM_DB.delete("admin_auth_attempts"),
-            env.ESIM_DB.delete("admin_auth_send_cooldown")
+            env.ESIM_KV.delete("admin_auth_code_hash"),
+            env.ESIM_KV.delete("admin_auth_salt"),
+            env.ESIM_KV.delete("admin_auth_attempts"),
+            env.ESIM_KV.delete("admin_auth_send_cooldown")
           ]);
           return json({ success: false, message: "发送失败，请检查机器人状态" }, 500);
         }
@@ -874,14 +874,14 @@ export default {
         if (!/^\d{6}$/.test(code)) return json({ success: false, message: "请输入 6 位验证码" }, 400);
 
         const [storedHash, salt, attemptsRaw] = await Promise.all([
-          env.ESIM_DB.get("admin_auth_code_hash"),
-          env.ESIM_DB.get("admin_auth_salt"),
-          env.ESIM_DB.get("admin_auth_attempts")
+          env.ESIM_KV.get("admin_auth_code_hash"),
+          env.ESIM_KV.get("admin_auth_salt"),
+          env.ESIM_KV.get("admin_auth_attempts")
         ]);
         let attempts = parseInt(attemptsRaw, 10) || 0;
 
         if (attempts >= 3) {
-          await Promise.all([env.ESIM_DB.delete("admin_auth_code_hash"), env.ESIM_DB.delete("admin_auth_salt"), env.ESIM_DB.delete("admin_auth_attempts")]);
+          await Promise.all([env.ESIM_KV.delete("admin_auth_code_hash"), env.ESIM_KV.delete("admin_auth_salt"), env.ESIM_KV.delete("admin_auth_attempts")]);
           return json({ success: false, message: "错误次数过多，验证码已失效" }, 403);
         }
         if (!storedHash || !salt) return json({ success: false, message: "验证码已过期，请重新获取" }, 400);
@@ -889,16 +889,16 @@ export default {
         if (await sha256(salt + code) === storedHash) {
           const token = crypto.randomUUID();
           await Promise.all([
-            env.ESIM_DB.put("admin_session_token", token, { expirationTtl: 86400 }),
-            env.ESIM_DB.delete("admin_auth_code_hash"),
-            env.ESIM_DB.delete("admin_auth_salt"),
-            env.ESIM_DB.delete("admin_auth_attempts")
+            env.ESIM_KV.put("admin_session_token", token, { expirationTtl: 86400 }),
+            env.ESIM_KV.delete("admin_auth_code_hash"),
+            env.ESIM_KV.delete("admin_auth_salt"),
+            env.ESIM_KV.delete("admin_auth_attempts")
           ]);
           return json({ success: true, token });
         }
 
         attempts++;
-        await env.ESIM_DB.put("admin_auth_attempts", String(attempts), { expirationTtl: 300 });
+        await env.ESIM_KV.put("admin_auth_attempts", String(attempts), { expirationTtl: 300 });
         return json({ success: false, message: `验证码错误！剩余 ${Math.max(0, 3 - attempts)} 次` }, 401);
       } catch {
         return json({ success: false, message: "系统错误，请重试" }, 500);
@@ -921,7 +921,7 @@ export default {
         if (cleaned.error) return json({ success: false, message: cleaned.error }, 400);
         const sim = { id: crypto.randomUUID(), ...cleaned.value };
         esims.push(sim);
-        await env.ESIM_DB.put("esim_list", JSON.stringify(esims));
+        await env.ESIM_KV.put("esim_list", JSON.stringify(esims));
         return json({ success: true, id: sim.id });
       }
 
@@ -939,7 +939,7 @@ export default {
           return { ...sim, ...cleaned.value, id: sim.id };
         });
         if (!found) return json({ success: false, message: "未找到记录" }, 404);
-        await env.ESIM_DB.put("esim_list", JSON.stringify(esims));
+        await env.ESIM_KV.put("esim_list", JSON.stringify(esims));
         return json({ success: true });
       }
 
@@ -950,7 +950,7 @@ export default {
         const before = esims.length;
         esims = esims.filter(sim => sim.id !== id);
         if (esims.length === before) return json({ success: false, message: "未找到记录" }, 404);
-        await env.ESIM_DB.put("esim_list", JSON.stringify(esims));
+        await env.ESIM_KV.put("esim_list", JSON.stringify(esims));
         return json({ success: true });
       }
 
@@ -962,7 +962,7 @@ export default {
 
   async scheduled(event, env) {
     const tgToken = env.TG_BOT_TOKEN, tgChat = env.TG_CHAT_ID;
-    if (!env.ESIM_DB || !tgToken || !tgChat) return;
+    if (!env.ESIM_KV || !tgToken || !tgChat) return;
 
     let esims;
     try { esims = await readEsims(env); }
