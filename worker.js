@@ -256,7 +256,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
         .card-actions { display: flex; gap: 2px; flex-shrink: 0; margin-left: var(--s); }
         .card-name { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
         .card-number { font-size: 13px; color: var(--text-secondary); margin-bottom: var(--s); font-family: var(--font-mono); }
-        .card-remark { font-size: 12px; color: var(--text-tertiary); margin-bottom: var(--s); line-height: 1.5; }
+        .card-remark { font-size: 12px; color: var(--text-tertiary); margin-bottom: var(--s); line-height: 1.5; padding-left: 8px; border-left: 2px solid var(--border); }
         .card-platforms { margin-bottom: var(--s); }
         .card-footer { margin-top: var(--m); padding-top: var(--m); border-top: 1px solid var(--border-light); }
         .card-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-tertiary); }
@@ -271,12 +271,11 @@ const HTML_CONTENT = `<!DOCTYPE html>
         .absolute { position: absolute; }
         .w-full { width: 100%; }
         .label { display: block; }
-        .search-icon { top: 10px; left: 0; font-size: 12px; }
+        .search-icon { top: 9px; left: 0; display: flex; align-items: center; }
         .input-search { padding-left: 22px; }
         .modal-close { top: 12px; right: 12px; }
         .confirm-dialog { max-width: 320px; }
         .flag { display: inline-flex; gap: 1px; font-size: 16px; line-height: 1; }
-        .note-icon { font-size: 10px; opacity: 0.5; margin-right: 4px; }
         .btn-icon-danger { color: var(--danger); }
 
         /* ========== eSIM Code ========== */
@@ -321,13 +320,13 @@ const HTML_CONTENT = `<!DOCTYPE html>
                 <p class="text-sm text-secondary mt-s">到期前 30 天 Telegram 提醒</p>
             </div>
             <div class="flex items-center gap-s flex-wrap">
-                <button onclick="openModal()" class="btn btn-primary btn-sm">＋ 添加</button>
+                <button onclick="openModal()" class="btn btn-primary btn-sm"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> 添加</button>
             </div>
         </div>
 
         <!-- Search -->
         <div class="relative mb-l">
-            <span class="absolute text-tertiary search-icon">⌕</span>
+            <span class="absolute text-tertiary search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
             <input type="text" id="searchInput" placeholder="搜索…" oninput="filterCards()"
                 class="input input-search">
         </div>
@@ -357,7 +356,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
     <!-- ========== ADD/EDIT MODAL ========== -->
     <div id="addModal" class="modal-backdrop hidden">
         <div class="modal modal-enter" id="modalContent">
-            <button onclick="closeModal()" class="btn-icon absolute modal-close" aria-label="关闭">×</button>
+            <button onclick="closeModal()" class="btn-icon absolute modal-close" aria-label="关闭"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
             <h2 class="mb-m" id="modalTitle">新增 eSIM</h2>
             <form id="addForm" onsubmit="submitForm(event)" class="flex flex-col gap-m">
                 <div>
@@ -493,6 +492,13 @@ const HTML_CONTENT = `<!DOCTYPE html>
             document.getElementById('main-container').classList.add('hidden');
         }
 
+        // ==================== SVG ICONS ====================
+        var SVG = {
+            edit: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>',
+            refresh: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>',
+            trash: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>'
+        };
+
         // ==================== DATA ====================
         async function fetchEsimData(){
             var c=document.getElementById('esim-container');
@@ -535,7 +541,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
                             platformsHTML='<div class="card-platforms">'+sim.platforms.split(/[,，\\s]+/).filter(Boolean).map(function(t){return '<span class="platform-tag">'+esc(t)+'</span>';}).join('')+'</div>';
                         }
                         var remark=sim.remark||'';
-                        var remarkHTML=remark?'<div class="card-remark"><span class="note-icon">▸</span>'+esc(remark.length>60?remark.substring(0,60)+'…':remark)+'</div>':'';
+                        var remarkHTML=remark?'<div class="card-remark">'+esc(remark.length>60?remark.substring(0,60)+'…':remark)+'</div>':'';
                         var esimCodeHTML='';
                         if(sim.esimCode){
                             esimCodeHTML='<div class="esim-code-wrap">'+
@@ -550,9 +556,9 @@ const HTML_CONTENT = `<!DOCTYPE html>
                                     '<span class="badge '+badgeClass+'">'+statusText+'</span>'+
                                 '</div>'+
                                 '<div class="card-actions">'+
-                                    '<button onclick="openEditModal(\\''+id+'\\')" class="btn-icon" title="编辑">✎</button>'+
-                                    '<button onclick="renewEsim(\\''+id+'\\','+cycleNum+')" class="btn-icon" title="续期">↻</button>'+
-                                    '<button onclick="deleteEsim(\\''+id+'\\')" class="btn-icon btn-icon-danger" title="删除">×</button>'+
+                                    '<button onclick="openEditModal(\\''+id+'\\')" class="btn-icon" title="编辑">'+SVG.edit+'</button>'+
+                                    '<button onclick="renewEsim(\\''+id+'\\','+cycleNum+')" class="btn-icon" title="续期">'+SVG.refresh+'</button>'+
+                                    '<button onclick="deleteEsim(\\''+id+'\\')" class="btn-icon btn-icon-danger" title="删除">'+SVG.trash+'</button>'+
                                 '</div>'+
                             '</div>'+
                             '<div class="card-name truncate" title="'+esc(sim.name)+'">'+esc(sim.name||'')+'</div>'+
@@ -576,7 +582,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
             var text=(btn.getAttribute('data-code')||'').replace(/^lpa:/i,'LPA:');
             var orig=btn.textContent;
             function onSuccess(){
-                btn.textContent='✓ 已复制';
+                btn.textContent='已复制';
                 setTimeout(function(){btn.textContent=orig;},1500);
             }
             if(navigator.clipboard&&navigator.clipboard.writeText){
@@ -586,7 +592,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
         function fallbackCopy(text,btn,orig){
             var ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
             document.body.appendChild(ta);ta.select();
-            try{document.execCommand('copy');btn.textContent='✓ 已复制';setTimeout(function(){btn.textContent=orig;},1500);}
+            try{document.execCommand('copy');btn.textContent='已复制';setTimeout(function(){btn.textContent=orig;},1500);}
             catch(e){showToast('复制失败','error');}
             document.body.removeChild(ta);
         }
