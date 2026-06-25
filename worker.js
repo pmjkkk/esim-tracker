@@ -256,8 +256,8 @@ const HTML_CONTENT = `<!DOCTYPE html>
         .card-actions { display: flex; gap: 2px; flex-shrink: 0; margin-left: var(--s); }
         .card-name { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
         .card-number { font-size: 13px; color: var(--text-secondary); margin-bottom: var(--s); font-family: var(--font-mono); }
-        .card-remark { font-size: 12px; color: var(--text-tertiary); margin-bottom: var(--s); line-height: 1.5; display: flex; gap: 5px; align-items: flex-start; }
-        .card-remark svg { flex-shrink: 0; margin-top: 1px; }
+        .card-remark { font-size: 12px; color: var(--text-tertiary); margin-bottom: var(--s); line-height: 1.5; display: flex; gap: 5px; align-items: center; }
+        .card-remark svg { flex-shrink: 0; }
         .card-platforms { margin-bottom: var(--s); }
         .card-footer { margin-top: var(--m); padding-top: var(--m); border-top: 1px solid var(--border-light); }
         .card-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-tertiary); }
