@@ -107,14 +107,14 @@ const HTML_CONTENT = `<!DOCTYPE html>
         .stat-card {
             background: var(--surface);
             border: 1px solid var(--border);
-            padding: var(--m) var(--l);
+            padding: var(--m);
             display: flex;
-            align-items: center;
-            justify-content: space-between;
+            flex-direction: column;
+            gap: 4px;
         }
         .stat-dot {
             width: 6px; height: 6px; border-radius: 50%; display: inline-block;
-            margin-right: 6px; vertical-align: middle;
+            margin-right: 5px; vertical-align: middle;
         }
         .dot-safe { background: var(--safe); }
         .dot-warn { background: var(--warn); }
@@ -246,9 +246,8 @@ const HTML_CONTENT = `<!DOCTYPE html>
             display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--m);
             margin-bottom: var(--l);
         }
-        @media (max-width: 640px) { .stats-row { grid-template-columns: 1fr; } }
 
-        .stat-value { font-size: 28px; font-weight: 700; line-height: 1; }
+        .stat-value { font-size: 24px; font-weight: 700; line-height: 1; }
         .stat-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-tertiary); }
 
         /* ========== Card Content ========== */
