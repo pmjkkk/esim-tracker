@@ -42,7 +42,7 @@ Cloudflare Workers · Workers KV · Telegram Bot API · 原生 HTML/CSS/JS · Wr
 
 | 类型 | 名称 | 值 / 说明 |
 |------|------|-----------|
-| KV 绑定 | `ESIM_DB` | 指向你创建的 KV Namespace（建议命名 `esim_db`） |
+| KV 绑定 | `ESIM_DB` | 指向你创建的 KV Namespace（建议命名 `esim_kv`） |
 | 环境变量 | `TG_BOT_TOKEN` | @BotFather 颁发的 Telegram Bot Token |
 | 环境变量 | `TG_CHAT_ID` | @userinfobot 返回的 Chat ID |
 
@@ -56,7 +56,7 @@ Cloudflare Workers · Workers KV · Telegram Bot API · 原生 HTML/CSS/JS · Wr
 
 ### 2. 创建 KV
 
-Cloudflare Dashboard → `Storage & databases → Workers KV → Create Instance`，建议命名 `esim_db`。
+Cloudflare Dashboard → `Storage & databases → Workers KV → Create Instance`，建议命名 `esim_kv`。
 
 ### 3. 部署 Worker
 
@@ -73,7 +73,7 @@ Cloudflare Dashboard → `Storage & databases → Workers KV → Create Instance
 
 进入 Worker 项目 `esim-tracker`，按「[配置速查](#配置速查)」完成：
 
-- `Settings → Bindings → Add binding → KV Namespace`：变量名 `ESIM_DB` → 选择 `esim_db`
+- `Settings → Bindings → Add binding → KV Namespace`：变量名 `ESIM_DB` → 选择 `esim_kv`
 - `Settings → Variables and Secrets → Add`：添加 `TG_BOT_TOKEN` 与 `TG_CHAT_ID`
 
 ### 5. 访问面板
