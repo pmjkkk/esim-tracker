@@ -1,4 +1,4 @@
-// esim-tracker v6.8 — Minimalist
+// esim-tracker v7.0 — Minimalist
 // 单文件 Cloudflare Worker：前端 / API / 定时提醒
 const HTML_CONTENT = `<!DOCTYPE html>
 <html lang="zh-CN">
@@ -18,13 +18,9 @@ const HTML_CONTENT = `<!DOCTYPE html>
             --text-tertiary: #a3a3a3;
             --accent: #4f46e5;
             --safe: #16a34a;
-            --safe-bg: #f0fdf4;
             --warn: #ca8a04;
-            --warn-bg: #fefce8;
             --danger: #dc2626;
-            --danger-bg: #fef2f2;
             --expired: #a3a3a3;
-            --expired-bg: #f5f5f5;
             --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
             --font-mono: 'SF Mono', 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
             --s: 8px;
@@ -143,10 +139,10 @@ const HTML_CONTENT = `<!DOCTYPE html>
             letter-spacing: 0.04em; padding: 2px 6px;
             display: inline-flex; align-items: center; gap: 4px;
         }
-        .badge-safe { color: var(--safe); background: var(--safe-bg); }
-        .badge-warn { color: var(--warn); background: var(--warn-bg); }
-        .badge-danger { color: var(--danger); background: var(--danger-bg); }
-        .badge-expired { color: var(--expired); background: var(--expired-bg); }
+        .badge-safe { color: var(--safe); background: #f0fdf4; }
+        .badge-warn { color: var(--warn); background: #fefce8; }
+        .badge-danger { color: var(--danger); background: #fef2f2; }
+        .badge-expired { color: var(--expired); background: #f5f5f5; }
 
         /* ========== Platform Tags ========== */
         .platform-tag {
@@ -523,8 +519,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
                 c.innerHTML='<div class="col-span text-center py-s text-tertiary">暂无卡片，点击「添加」</div>';
             }else{
                 var sorted = esimData.slice().sort(function(a,b){return parseDate(a.expireDate)-parseDate(b.expireDate);});
-                for(var i=0;i<sorted.length;i++){
-                    (function(sim,idx){
+                sorted.forEach(function(sim,idx){
                         var exp=parseDate(sim.expireDate);exp.setHours(0,0,0,0);
                         var diff=Math.ceil((exp-today)/86400000);
                         var fillClass,badgeClass,statusText;
@@ -533,8 +528,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
                         else if(diff>0){fillClass='progress-danger';badgeClass='badge-danger';statusText='告警';dangC++;}
                         else{fillClass='progress-expired';badgeClass='badge-expired';statusText='已过期';dangC++;}
                         var cycleNum=parseInt(sim.cycle,10)||0;
-                        var cycle=cycleNum||180;
-                        var pct=diff<=0?100:Math.max(2,Math.min(100,Math.round((cycle-diff)/cycle*100)));
+                        var pct=diff<=0?100:Math.max(2,Math.min(100,Math.round(((cycleNum||180)-diff)/(cycleNum||180)*100)));
                         var flag=getCountryFlag(sim.number);
                         var platformsHTML='';
                         if(sim.platforms){
@@ -548,9 +542,6 @@ const HTML_CONTENT = `<!DOCTYPE html>
                                 '<button class="btn-copy w-full" data-code="'+esc(sim.esimCode)+'" onclick="copyEsimCodeRaw(this)">复制 eSIM 激活码</button>'+
                             '</div>';
                         }
-                        var diffTxt=diff<0?'0':String(diff);
-                        var renewCycle=cycleNum;
-                        var displayCycle=cycleNum||'-';
                         var id=esc(sim.id);
 
                         html+='<div class="card card-enter" style="animation-delay:'+(idx*0.04)+'s" data-search-text="'+esc((sim.name||'')+' '+(sim.number||'')+' '+(sim.platforms||'')+' '+(sim.remark||'')).toLowerCase()+'">'+
@@ -560,20 +551,19 @@ const HTML_CONTENT = `<!DOCTYPE html>
                                 '</div>'+
                                 '<div class="card-actions">'+
                                     '<button onclick="openEditModal(\\''+id+'\\')" class="btn-icon" title="编辑">✎</button>'+
-                                    '<button onclick="renewEsim(\\''+id+'\\','+renewCycle+')" class="btn-icon" title="续期">↻</button>'+
+                                    '<button onclick="renewEsim(\\''+id+'\\','+cycleNum+')" class="btn-icon" title="续期">↻</button>'+
                                     '<button onclick="deleteEsim(\\''+id+'\\')" class="btn-icon btn-icon-danger" title="删除">×</button>'+
                                 '</div>'+
                             '</div>'+
                             '<div class="card-name truncate" title="'+esc(sim.name)+'">'+esc(sim.name||'')+'</div>'+
                             '<div class="card-number truncate">'+esc(sim.number||'—')+'</div>'+esimCodeHTML+remarkHTML+platformsHTML+
                             '<div class="card-footer">'+
-                                '<div class="flex justify-between text-sm mb-s"><span class="text-secondary">剩余</span><span class="font-semibold'+(diff<=15&&diff>0?' text-danger':'')+'">'+diffTxt+' 天</span></div>'+
+                                '<div class="flex justify-between text-sm mb-s"><span class="text-secondary">剩余</span><span class="font-semibold'+(diff<=15&&diff>0?' text-danger':'')+'">'+( diff<0?'0':diff)+' 天</span></div>'+
                                 '<div class="progress-track"><div class="progress-fill '+fillClass+'" style="width:'+pct+'%"></div></div>'+
-                                '<div class="card-meta mt-s"><span>周期 '+esc(displayCycle)+' 天</span><span class="mono">'+esc(sim.expireDate)+'</span></div>'+
+                                '<div class="card-meta mt-s"><span>周期 '+(cycleNum||'-')+' 天</span><span class="mono">'+esc(sim.expireDate)+'</span></div>'+
                             '</div>'+
                         '</div>';
-                    })(sorted[i],i);
-                }
+                });
                 c.innerHTML=html;
             }
             document.getElementById('stat-safe').innerText=safeC;
@@ -720,7 +710,6 @@ const CORS_HEADERS = {
 };
 const JSON_HEADERS = { "Content-Type": "application/json;charset=UTF-8" };
 const MAX_LEN = { name: 80, number: 40, platforms: 120, remark: 240, esimCode: 512 };
-const DAY = 86400000;
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data), { status, headers: { ...CORS_HEADERS, ...JSON_HEADERS } });
@@ -806,7 +795,7 @@ function daysUntilCST(dateString, now = new Date()) {
   const exp = Date.UTC(y, m - 1, d);
   const cst = new Date(now.getTime() + 8 * 3600 * 1000);
   const today = Date.UTC(cst.getUTCFullYear(), cst.getUTCMonth(), cst.getUTCDate());
-  return Math.ceil((exp - today) / DAY);
+  return Math.ceil((exp - today) / 86400000);
 }
 
 export default {
@@ -833,10 +822,8 @@ export default {
       return json({ success: false, message: "KV 未绑定，请绑定 ESIM_KV" }, 500);
     }
 
-    const tgToken = env.TG_BOT_TOKEN;
-    const tgChat = env.TG_CHAT_ID;
-
     if (path === "/api/auth/send" && request.method === "POST") {
+      const tgToken = env.TG_BOT_TOKEN, tgChat = env.TG_CHAT_ID;
       try {
         if (!tgToken || !tgChat) return json({ success: false, message: "TG 机器人未配置，请检查 TG_BOT_TOKEN / TG_CHAT_ID" }, 500);
         if (await env.ESIM_KV.get("admin_auth_send_cooldown")) return json({ success: false, message: "验证码已发送，请稍后再试" }, 429);
