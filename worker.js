@@ -485,6 +485,9 @@ const HTML_CONTENT = `<!DOCTYPE html>
 
         function logout(){
             if(countdownInterval) clearInterval(countdownInterval);
+            if(authToken){
+                fetch('/api/auth/logout',{method:'POST',headers:getAuthHeaders()}).catch(function(){});
+            }
             authToken = null;
             document.getElementById('login-container').classList.remove('hidden');
             document.getElementById('main-container').classList.add('hidden');
@@ -530,11 +533,11 @@ const HTML_CONTENT = `<!DOCTYPE html>
                         if(diff>15){fillClass='progress-safe';badgeClass='badge-safe';statusText='未到期';safeC++;}
                         else if(diff>0){fillClass='progress-danger';badgeClass='badge-danger';statusText='告警';dangC++;}
                         else{fillClass='progress-warn';badgeClass='badge-warn';statusText='已过期';warnC++;}
-                        var cycleNum=parseInt(sim.cycle,10)||180;
-                        var elapsed=cycleNum-diff;
+                        var cycleNum=parseInt(sim.cycle,10)||0;
+                        var elapsed=cycleNum>0?cycleNum-diff:0;
                         var pct;
                         if(diff>15){
-                            pct=Math.max(2,Math.min(98,Math.round(elapsed/cycleNum*100)));
+                            pct=cycleNum>0?Math.max(2,Math.min(98,Math.round(elapsed/cycleNum*100))):2;
                         }else if(diff>0){
                             pct=Math.max(2,Math.round((15-diff)/15*100));
                         }else{
@@ -863,6 +866,15 @@ export default {
       } catch {
         return json({ success: false, message: "系统错误，请重试" }, 500);
       }
+    }
+
+    if (path === "/api/auth/logout" && request.method === "POST") {
+      const token = (request.headers.get("Authorization") || "").trim();
+      if (token) {
+        const stored = await env.ESIM_KV.get("admin_session_token");
+        if (stored === token) await env.ESIM_KV.delete("admin_session_token");
+      }
+      return json({ success: true });
     }
 
     if (path === "/api/auth/verify" && request.method === "POST") {
