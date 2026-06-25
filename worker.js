@@ -532,7 +532,14 @@ const HTML_CONTENT = `<!DOCTYPE html>
                         else{fillClass='progress-warn';badgeClass='badge-warn';statusText='已过期';warnC++;}
                         var cycleNum=parseInt(sim.cycle,10)||180;
                         var elapsed=cycleNum-diff;
-                        var pct=Math.max(2,Math.min(100,Math.round(elapsed/cycleNum*100)));
+                        var pct;
+                        if(diff>15){
+                            pct=Math.max(2,Math.min(98,Math.round(elapsed/cycleNum*100)));
+                        }else if(diff>0){
+                            pct=Math.max(2,Math.round((15-diff)/15*100));
+                        }else{
+                            pct=100;
+                        }
                         var flag=getCountryFlag(sim.number);
                         var platformsHTML='';
                         if(sim.platforms){
