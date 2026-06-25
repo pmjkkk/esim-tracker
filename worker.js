@@ -256,7 +256,8 @@ const HTML_CONTENT = `<!DOCTYPE html>
         .card-actions { display: flex; gap: 2px; flex-shrink: 0; margin-left: var(--s); }
         .card-name { font-size: 16px; font-weight: 600; margin-bottom: 2px; }
         .card-number { font-size: 13px; color: var(--text-secondary); margin-bottom: var(--s); font-family: var(--font-mono); }
-        .card-remark { font-size: 12px; color: var(--text-tertiary); margin-bottom: var(--s); line-height: 1.5; padding-left: 8px; border-left: 2px solid var(--border); }
+        .card-remark { font-size: 12px; color: var(--text-tertiary); margin-bottom: var(--s); line-height: 1.5; display: flex; gap: 5px; align-items: flex-start; }
+        .card-remark svg { flex-shrink: 0; margin-top: 1px; }
         .card-platforms { margin-bottom: var(--s); }
         .card-footer { margin-top: var(--m); padding-top: var(--m); border-top: 1px solid var(--border-light); }
         .card-meta { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-tertiary); }
@@ -541,7 +542,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
                             platformsHTML='<div class="card-platforms">'+sim.platforms.split(/[,，\\s]+/).filter(Boolean).map(function(t){return '<span class="platform-tag">'+esc(t)+'</span>';}).join('')+'</div>';
                         }
                         var remark=sim.remark||'';
-                        var remarkHTML=remark?'<div class="card-remark">'+esc(remark.length>60?remark.substring(0,60)+'…':remark)+'</div>':'';
+                        var remarkHTML=remark?'<div class="card-remark"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'+esc(remark.length>60?remark.substring(0,60)+'…':remark)+'</div>':'';
                         var esimCodeHTML='';
                         if(sim.esimCode){
                             esimCodeHTML='<div class="esim-code-wrap">'+
