@@ -527,8 +527,8 @@ const HTML_CONTENT = `<!DOCTYPE html>
                         var exp=parseDate(sim.expireDate);exp.setHours(0,0,0,0);
                         var diff=Math.ceil((exp-today)/86400000);
                         var fillClass,badgeClass,statusText;
-                        if(diff>0){fillClass='progress-safe';badgeClass='badge-safe';statusText='未到期';safeC++;}
-                        else if(diff>-15){fillClass='progress-danger';badgeClass='badge-danger';statusText='告警';dangC++;}
+                        if(diff>15){fillClass='progress-safe';badgeClass='badge-safe';statusText='未到期';safeC++;}
+                        else if(diff>0){fillClass='progress-danger';badgeClass='badge-danger';statusText='告警';dangC++;}
                         else{fillClass='progress-warn';badgeClass='badge-warn';statusText='已过期';warnC++;}
                         var cycleNum=parseInt(sim.cycle,10)||180;
                         var elapsed=cycleNum-diff;
