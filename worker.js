@@ -20,7 +20,6 @@ const HTML_CONTENT = `<!DOCTYPE html>
             --safe: #16a34a;
             --warn: #ca8a04;
             --danger: #dc2626;
-            --expired: #a3a3a3;
             --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
             --font-mono: 'SF Mono', 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
             --s: 8px;
@@ -110,6 +109,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
             padding: var(--m);
             display: flex;
             flex-direction: column;
+            align-items: center;
             gap: 4px;
         }
         .stat-dot {
@@ -131,7 +131,6 @@ const HTML_CONTENT = `<!DOCTYPE html>
         .progress-safe { background: var(--safe); }
         .progress-warn { background: var(--warn); }
         .progress-danger { background: var(--danger); }
-        .progress-expired { background: var(--expired); }
 
         /* ========== Status Badge ========== */
         .badge {
@@ -142,7 +141,6 @@ const HTML_CONTENT = `<!DOCTYPE html>
         .badge-safe { color: var(--safe); background: #f0fdf4; }
         .badge-warn { color: var(--warn); background: #fefce8; }
         .badge-danger { color: var(--danger); background: #fef2f2; }
-        .badge-expired { color: var(--expired); background: #f5f5f5; }
 
         /* ========== Platform Tags ========== */
         .platform-tag {
@@ -334,16 +332,16 @@ const HTML_CONTENT = `<!DOCTYPE html>
         <!-- Stats -->
         <div class="stats-row">
             <div class="stat-card">
-                <div><span class="stat-dot dot-safe"></span><span class="stat-label">安全 &gt;45天</span></div>
+                <div><span class="stat-dot dot-safe"></span><span class="stat-label">未到期</span></div>
                 <span class="stat-value text-safe" id="stat-safe">—</span>
-            </div>
-            <div class="stat-card">
-                <div><span class="stat-dot dot-warn"></span><span class="stat-label">关注 &lt;45天</span></div>
-                <span class="stat-value text-warn" id="stat-warn">—</span>
             </div>
             <div class="stat-card">
                 <div><span class="stat-dot dot-danger"></span><span class="stat-label">告警 ≤15天</span></div>
                 <span class="stat-value text-danger" id="stat-danger">—</span>
+            </div>
+            <div class="stat-card">
+                <div><span class="stat-dot dot-warn"></span><span class="stat-label">已过期</span></div>
+                <span class="stat-value text-warn" id="stat-warn">—</span>
             </div>
         </div>
 
@@ -529,10 +527,9 @@ const HTML_CONTENT = `<!DOCTYPE html>
                         var exp=parseDate(sim.expireDate);exp.setHours(0,0,0,0);
                         var diff=Math.ceil((exp-today)/86400000);
                         var fillClass,badgeClass,statusText;
-                        if(diff>45){fillClass='progress-safe';badgeClass='badge-safe';statusText='安全';safeC++;}
-                        else if(diff>15){fillClass='progress-warn';badgeClass='badge-warn';statusText='关注';warnC++;}
-                        else if(diff>0){fillClass='progress-danger';badgeClass='badge-danger';statusText='告警';dangC++;}
-                        else{fillClass='progress-expired';badgeClass='badge-expired';statusText='已过期';dangC++;}
+                        if(diff>0){fillClass='progress-safe';badgeClass='badge-safe';statusText='未到期';safeC++;}
+                        else if(diff>-15){fillClass='progress-danger';badgeClass='badge-danger';statusText='告警';dangC++;}
+                        else{fillClass='progress-warn';badgeClass='badge-warn';statusText='已过期';warnC++;}
                         var cycleNum=parseInt(sim.cycle,10)||0;
                         var pct=diff<=0?100:Math.max(2,Math.min(100,Math.round(((cycleNum||180)-diff)/(cycleNum||180)*100)));
                         var flag=getCountryFlag(sim.number);
@@ -564,7 +561,7 @@ const HTML_CONTENT = `<!DOCTYPE html>
                             '<div class="card-name truncate" title="'+esc(sim.name)+'">'+esc(sim.name||'')+'</div>'+
                             '<div class="card-number truncate">'+esc(sim.number||'—')+'</div>'+esimCodeHTML+remarkHTML+platformsHTML+
                             '<div class="card-footer">'+
-                                '<div class="flex justify-between text-sm mb-s"><span class="text-secondary">剩余</span><span class="font-semibold'+(diff<=15&&diff>0?' text-danger':'')+'">'+( diff<0?'0':diff)+' 天</span></div>'+
+                                '<div class="flex justify-between text-sm mb-s"><span class="text-secondary">剩余</span><span class="font-semibold'+(diff<=0?' text-warn':diff<=15?' text-danger':'')+'">'+( diff<0?'0':diff)+' 天</span></div>'+
                                 '<div class="progress-track"><div class="progress-fill '+fillClass+'" style="width:'+pct+'%"></div></div>'+
                                 '<div class="card-meta mt-s"><span>周期 '+(cycleNum||'-')+' 天</span><span class="mono">'+esc(sim.expireDate)+'</span></div>'+
                             '</div>'+
